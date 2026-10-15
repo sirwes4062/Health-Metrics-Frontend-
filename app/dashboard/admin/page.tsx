@@ -3,18 +3,62 @@ import {
   BarChart2,
   Heart,
   AlertTriangle,
-  ArrowRight,
 } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
-import PatientTableRow from "@/components/PatientTableRow";
+import PatientHistoryTable from "@/components/PatientHistoryTable";
+import HardwareSessionStatusSync from "@/components/HardwareSessionStatusSync";
 
 import { getDashboardData } from "../../../services/api";
 
 export default async function AdminDashboard() {
   const patients = await getDashboardData();
+  const activePatientId =
+    patients.find((patient) => patient.hardwareSessionActive)?.id ?? null;
+  const ages = patients
+    .map((patient) => patient.age)
+    .filter(
+      (age): age is number =>
+        typeof age === "number" &&
+        Number.isInteger(age) &&
+        age >= 0 &&
+        age <= 120,
+    );
+  const ageGroups = [
+    {
+      label: "0-17",
+      count: ages.filter((age) => age < 18).length,
+      color: "bg-blue-600",
+    },
+    {
+      label: "18-44",
+      count: ages.filter((age) => age >= 18 && age < 45).length,
+      color: "bg-blue-500",
+    },
+    {
+      label: "45-64",
+      count: ages.filter((age) => age >= 45 && age < 65).length,
+      color: "bg-blue-400",
+    },
+    {
+      label: "65+",
+      count: ages.filter((age) => age >= 65).length,
+      color: "bg-blue-300",
+    },
+  ];
+  const latestHeartRates = patients
+    .map((patient) => patient.latestVital?.heartRate)
+    .filter((heartRate): heartRate is number => Number.isFinite(heartRate));
+  const averageHeartRate =
+    latestHeartRates.length > 0 ?
+      Math.round(
+        latestHeartRates.reduce((total, heartRate) => total + heartRate, 0) /
+          latestHeartRates.length,
+      )
+    : null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-800 p-6 lg:p-8 relative pb-24">
+      <HardwareSessionStatusSync activePatientId={activePatientId} />
       {/* HEADER */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
@@ -40,43 +84,52 @@ export default async function AdminDashboard() {
             <div className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
               <Users className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-              +12.5% ~
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+              Registered
             </span>
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
             Total Users
           </p>
-          <h2 className="text-3xl font-extrabold text-slate-900">1,284</h2>
+          <h2 className="text-3xl font-extrabold text-slate-900">
+            {patients.length.toLocaleString()}
+          </h2>
         </div>
 
         {/* Age Dist */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Age Dist.
+              Age Distribution
             </p>
             <BarChart2 className="h-4 w-4 text-slate-400" />
           </div>
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1.5">
-                <span>18-45</span>
-                <span>42%</span>
-              </div>
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full w-[42%]" />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1.5">
-                <span>45-65</span>
-                <span>35%</span>
-              </div>
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-400 rounded-full w-[35%]" />
-              </div>
-            </div>
+            {ageGroups.map((group) => {
+              const percentage =
+                ages.length > 0 ?
+                  Math.round((group.count / ages.length) * 100)
+                : 0;
+
+              return (
+                <div key={group.label}>
+                  <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1.5">
+                    <span>{group.label}</span>
+                    <span>{percentage}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${group.color}`}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <p className="text-[10px] text-slate-400">
+              Based on {ages.length} of {patients.length} patients with age
+              recorded
+            </p>
           </div>
         </div>
 
@@ -86,17 +139,20 @@ export default async function AdminDashboard() {
             <div className="h-10 w-10 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center">
               <Heart className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              Stable -
-            </span>
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
             Avg Heart Rate
           </p>
           <div className="flex items-baseline gap-1">
-            <h2 className="text-3xl font-extrabold text-slate-900">72</h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">
+              {averageHeartRate ?? "--"}
+            </h2>
             <span className="text-xs font-bold text-slate-400">BPM</span>
           </div>
+          <p className="text-[10px] text-slate-400 mt-1">
+            From {latestHeartRates.length} latest patient reading
+            {latestHeartRates.length === 1 ? "" : "s"}
+          </p>
         </div>
 
         {/* Alerts / Warnings */}
@@ -276,70 +332,7 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* BOTTOM SECTION: Recent Vitals */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 overflow-hidden">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h3 className="text-xl font-extrabold text-slate-900">
-              Recent Vitals
-            </h3>
-            <p className="text-sm text-slate-500 font-medium">
-              Live feed from connected clinical device
-            </p>
-          </div>
-          <button className="flex items-center cursor-pointer gap-1 text-sm font-bold text-blue-700 hover:text-blue-800 transition-colors">
-            Full History <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-200">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  User Name
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Weight
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Height
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  BMI
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Heart Rate
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Temperature
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  spo2
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Status
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Timestamp
-                </th>
-                <th className="pb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="text-sm font-bold text-slate-900">
-              {patients.map((patient, index) => (
-                <PatientTableRow
-                  key={patient.id}
-                  patient={patient}
-                  index={index}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <PatientHistoryTable patients={patients} />
     </div>
   );
 }

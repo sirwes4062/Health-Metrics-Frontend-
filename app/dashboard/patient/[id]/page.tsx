@@ -16,7 +16,12 @@ import {
   Weight,
 } from "lucide-react";
 
-import { getPatientProfile, getPatientHistoricalVitals } from "@/services/api";
+import {
+  getPatientProfile,
+  getPatientHistoricalVitals,
+  isHardwareSessionActiveForPatient,
+} from "@/services/api";
+import HardwareSessionStatusSync from "@/components/HardwareSessionStatusSync";
 
 function getInitials(name: string) {
   if (!name) return "PT";
@@ -52,9 +57,10 @@ export default async function PatientDashboard({
   const { id } = await params;
 
   // 2. Fetch the specific patient's profile and their full history in parallel
-  const [patient, vitals] = await Promise.all([
+  const [patient, vitals, isHardwareSessionActive] = await Promise.all([
     getPatientProfile(id),
     getPatientHistoricalVitals(id),
+    isHardwareSessionActiveForPatient(id),
   ]);
 
   // 3. Handle the case where the patient ID doesn't exist
@@ -73,6 +79,9 @@ export default async function PatientDashboard({
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-800 p-4 md:p-8 relative pb-24">
+      <HardwareSessionStatusSync
+        activePatientId={isHardwareSessionActive ? id : null}
+      />
       {/* HEADER */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
@@ -117,8 +126,12 @@ export default async function PatientDashboard({
             <div className="h-20 w-20 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">
               {getInitials(patient.fullName)}
             </div>
-            <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-[#f8fafc]">
-              ACTIVE
+            <span
+              className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-[#f8fafc] ${
+                isHardwareSessionActive ? "bg-emerald-600" : "bg-slate-500"
+              }`}
+            >
+              {isHardwareSessionActive ? "ACTIVE" : "INACTIVE"}
             </span>
           </div>
           <div>

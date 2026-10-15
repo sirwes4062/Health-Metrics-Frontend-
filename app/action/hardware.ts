@@ -1,6 +1,8 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
+import { getCurrentActiveHardwarePatientId } from '@/services/api'
 
 export async function startHardwareSession(patientId: string) {
   const cookieStore = await cookies()
@@ -23,5 +25,12 @@ export async function startHardwareSession(patientId: string) {
     throw new Error(`Failed to start hardware session: ${res.statusText}`)
   }
 
-  return await res.json()
+  const result = await res.json()
+  revalidatePath('/dashboard/admin')
+  revalidatePath(`/dashboard/patient/${patientId}`)
+  return result
+}
+
+export async function getHardwareSessionPatientId() {
+  return getCurrentActiveHardwarePatientId()
 }

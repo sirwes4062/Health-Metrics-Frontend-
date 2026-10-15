@@ -84,7 +84,7 @@ export default function PatientTableRow({
       <td className="py-5">{patient.latestVital?.spo2 || "--"}</td>
 
       <td className="py-5">
-        {patient.latestVital ?
+        {patient.hardwareSessionActive ?
           <span className="bg-emerald-50 text-emerald-600 text-[9px] px-2.5 py-1 rounded-md uppercase tracking-wider">
             Active
           </span>

@@ -89,7 +89,7 @@ export default function LoginPage() {
             </div>
 
             <span className="text-lg font-bold tracking-wide text-white">
-              PulseLink AI
+              PulseLink
             </span>
           </div>
 
@@ -296,6 +296,16 @@ export default function LoginPage() {
               className="font-semibold text-blue-600 hover:underline"
             >
               Request Access
+            </Link>
+          </p>
+
+          <p className="text-center text-xs text-slate-500">
+            Need to register a patient?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Register patient
             </Link>
           </p>
 

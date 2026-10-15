@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 export interface Patient {
   bloodGroup: string;
   gender?: string;
-  age?: string;
+  age?: number;
   id: string;
   fullName: string;
   email: string;
@@ -22,6 +22,32 @@ export interface HealthReading {
 
 export interface PatientWithVitals extends Patient {
   latestVital: HealthReading | null;
+  hardwareSessionActive: boolean;
+}
+
+async function getActiveHardwarePatientId(token: string): Promise<string | null> {
+  const res = await fetch("http://localhost:5000/hardware-session/active", {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Failed to fetch active hardware session: ${res.status}`);
+  }
+
+  const session: { patientId: string } = await res.json();
+  return session.patientId;
+}
+
+export async function getCurrentActiveHardwarePatientId(): Promise<
+  string | null
+> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+  if (!token) return null;
+
+  return getActiveHardwarePatientId(token);
 }
 
 // ==========================================
@@ -42,11 +68,14 @@ export async function getDashboardData(): Promise<PatientWithVitals[]> {
   const headers = { Authorization: `Bearer ${token}` };
 
   try {
-    // 1. Fetch all patients
-    const patientsRes = await fetch("http://localhost:5000/patients", {
-      headers,
-      cache: "no-store",
-    });
+    // Fetch the patient list and active session together.
+    const [patientsRes, activePatientId] = await Promise.all([
+      fetch("http://localhost:5000/patients", {
+        headers,
+        cache: "no-store",
+      }),
+      getActiveHardwarePatientId(token),
+    ]);
 
     if (!patientsRes.ok) {
       console.log(
@@ -84,7 +113,11 @@ export async function getDashboardData(): Promise<PatientWithVitals[]> {
           );
         }
 
-        return { ...patient, latestVital };
+        return {
+          ...patient,
+          latestVital,
+          hardwareSessionActive: patient.id === activePatientId,
+        };
       }),
     );
 
@@ -93,6 +126,13 @@ export async function getDashboardData(): Promise<PatientWithVitals[]> {
     console.error("❌ Failed to fetch dashboard data:", error);
     return [];
   }
+}
+
+export async function isHardwareSessionActiveForPatient(
+  patientId: string,
+): Promise<boolean> {
+  const activePatientId = await getCurrentActiveHardwarePatientId();
+  return activePatientId === patientId;
 }
 
 // fetching a single patient's profile and their historical vitals.
