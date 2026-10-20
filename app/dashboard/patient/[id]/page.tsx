@@ -90,7 +90,7 @@ export default async function PatientDashboard({
           </div>
           <div>
             <span className="text-xl font-bold tracking-tight text-slate-900 block leading-tight">
-              PulseLink <span className="text-blue-600">AI</span>
+              PulseLink 
             </span>
             <span className="text-[10px] text-slate-500 font-medium">
               Clinical Systems
