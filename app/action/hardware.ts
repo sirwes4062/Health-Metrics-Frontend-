@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { getCurrentActiveHardwarePatientId } from '@/services/api'
+import { getApiUrl } from '@/src/lib/api/client'
 
 export async function startHardwareSession(patientId: string) {
   const cookieStore = await cookies()
@@ -12,7 +13,7 @@ export async function startHardwareSession(patientId: string) {
     throw new Error('Unauthorized: No access token found')
   }
 
-  const res = await fetch('http://localhost:5000/hardware-session/start', {
+  const res = await fetch(getApiUrl('/hardware-session/start'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

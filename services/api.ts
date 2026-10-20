@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getApiUrl } from "@/src/lib/api/client";
 
 export interface Patient {
   bloodGroup: string;
@@ -26,7 +27,7 @@ export interface PatientWithVitals extends Patient {
 }
 
 async function getActiveHardwarePatientId(token: string): Promise<string | null> {
-  const res = await fetch("http://localhost:5000/hardware-session/active", {
+  const res = await fetch(getApiUrl("/hardware-session/active"), {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
@@ -70,7 +71,7 @@ export async function getDashboardData(): Promise<PatientWithVitals[]> {
   try {
     // Fetch the patient list and active session together.
     const [patientsRes, activePatientId] = await Promise.all([
-      fetch("http://localhost:5000/patients", {
+      fetch(getApiUrl("/patients"), {
         headers,
         cache: "no-store",
       }),
@@ -91,7 +92,7 @@ export async function getDashboardData(): Promise<PatientWithVitals[]> {
     const patientsWithVitals = await Promise.all(
       patients.map(async (patient) => {
         const vitalsRes = await fetch(
-          `http://localhost:5000/patients/${patient.id}/health-readings`,
+          getApiUrl(`/patients/${patient.id}/health-readings`),
           { headers, cache: "no-store" },
         );
 
@@ -142,15 +143,18 @@ export async function getPatientProfile(id: string): Promise<Patient | null> {
   if (!token) return null;
 
   try {
-    const res = await fetch(`http://localhost:5000/patients/${id}`, {
+    const res = await fetch(getApiUrl(`/patients/${id}`), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (res.status === 404 || res.status === 401) return null;
+    if (!res.ok) {
+      throw new Error(`Failed to fetch patient ${id}: ${res.status}`);
+    }
     return await res.json();
   } catch (error) {
     console.error(`Failed to fetch patient ${id}:`, error);
-    return null;
+    throw error;
   }
 }
 
@@ -163,7 +167,7 @@ export async function getPatientHistoricalVitals(
 
   try {
     const res = await fetch(
-      `http://localhost:5000/patients/${id}/health-readings`,
+      getApiUrl(`/patients/${id}/health-readings`),
       {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",

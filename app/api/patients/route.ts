@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getApiUrl } from "@/src/lib/api/client";
 
 const API_URL = process.env.NEST_API_URL;
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const response = await fetch(`${API_URL}/patients`, {
+    const response = await fetch(getApiUrl("/patients"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
