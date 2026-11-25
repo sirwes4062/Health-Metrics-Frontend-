@@ -3,15 +3,12 @@ import {
   Bell,
   History,
   Printer,
-  Mail,
   Heart,
   Thermometer,
   Scale,
   Search,
   ChevronDown,
   ArrowRight,
-  Utensils,
-  ActivitySquare,
   Ruler,
   Weight,
 } from "lucide-react";
@@ -22,6 +19,10 @@ import {
   isHardwareSessionActiveForPatient,
 } from "@/services/api";
 import HardwareSessionStatusSync from "@/components/HardwareSessionStatusSync";
+import HeartRateTrendCard from "@/components/HeartRateTrendCard";
+import AiHealthSummaryCard from "@/components/AiHealthSummaryCard";
+import SendReportButton from "@/components/SendReportButton";
+import PrintReportButton from "@/components/PrintReportButton";
 
 function getInitials(name: string) {
   if (!name) return "PT";
@@ -51,7 +52,7 @@ function formatTime(dateString: string) {
 export default async function PatientDashboard({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   // 1. Await params to extract the ID from the URL (Next.js 15+ requirement)
   const { id } = await params;
@@ -82,6 +83,7 @@ export default async function PatientDashboard({
       <HardwareSessionStatusSync
         activePatientId={isHardwareSessionActive ? id : null}
       />
+
       {/* HEADER */}
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
@@ -90,7 +92,7 @@ export default async function PatientDashboard({
           </div>
           <div>
             <span className="text-xl font-bold tracking-tight text-slate-900 block leading-tight">
-              PulseLink 
+              PulseLink
             </span>
             <span className="text-[10px] text-slate-500 font-medium">
               Clinical Systems
@@ -129,8 +131,7 @@ export default async function PatientDashboard({
             <span
               className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-[#f8fafc] ${
                 isHardwareSessionActive ? "bg-emerald-600" : "bg-slate-500"
-              }`}
-            >
+              }`}>
               {isHardwareSessionActive ? "ACTIVE" : "INACTIVE"}
             </span>
           </div>
@@ -141,7 +142,6 @@ export default async function PatientDashboard({
             <div className="flex gap-4 text-xs font-semibold mt-2 text-slate-500 uppercase tracking-wide">
               <span>
                 Age <br />
-                {/* Fallback to "--" if your backend doesn't supply age yet */}
                 <span className="text-slate-900">
                   {patient.age || "--"} Years
                 </span>
@@ -171,14 +171,8 @@ export default async function PatientDashboard({
         </div>
 
         <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex-1 md:flex-none justify-center">
-            <Printer className="h-4 w-4" />
-            Print Report
-          </button>
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-colors flex-1 md:flex-none justify-center">
-            <Mail className="h-4 w-4" />
-            Send to Email
-          </button>
+          <PrintReportButton patient={patient} vitals={vitals} />
+          <SendReportButton patientId={id} />
         </div>
       </div>
 
@@ -336,80 +330,12 @@ export default async function PatientDashboard({
 
       {/* MIDDLE SECTION (Chart & AI Summary) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Chart Area (Static Mockup for now) */}
-        <div className="lg:col-span-2 bg-white rounded-4xl p-8 shadow-sm border border-slate-100/50 flex flex-col justify-between min-h-87.5">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-extrabold text-slate-900">
-                Heart Rate Trend
-              </h3>
-              <p className="text-[11px] text-slate-400 font-semibold">
-                Detailed physiological spline tracking
-              </p>
-            </div>
-            <div className="flex gap-2 bg-slate-50 p-1 rounded-lg">
-              <button className="px-3 py-1 text-[10px] font-bold bg-blue-600 text-white rounded-md">
-                1W
-              </button>
-              <button className="px-3 py-1 text-[10px] font-bold text-slate-500 hover:text-slate-900 rounded-md">
-                1M
-              </button>
-              <button className="px-3 py-1 text-[10px] font-bold text-slate-500 hover:text-slate-900 rounded-md">
-                3M
-              </button>
-            </div>
-          </div>
-          <div className="w-full flex-1 relative mt-8 flex flex-col justify-end">
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="border-t border-slate-50 w-full h-0"></div>
-              <div className="border-t border-slate-50 w-full h-0"></div>
-              <div className="border-t border-slate-100 w-full h-0"></div>
-            </div>
-            <svg
-              viewBox="0 0 800 200"
-              className="w-full h-full overflow-visible preserve-3d"
-              preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="blueGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0 150 C 100 150, 150 120, 250 120 C 350 120, 400 140, 500 110 C 600 80, 650 60, 750 90 L 800 100 L 800 200 L 0 200 Z"
-                fill="url(#blueGradient)"
-              />
-              <path
-                d="M 0 150 C 100 150, 150 120, 250 120 C 350 120, 400 140, 500 110 C 600 80, 650 60, 750 90 L 800 100"
-                fill="none"
-                stroke="#dbeafe"
-                strokeWidth="4"
-              />
-              <circle
-                cx="530"
-                cy="100"
-                r="4"
-                fill="#1d4ed8"
-                className="shadow-lg"
-              />
-            </svg>
-            <div className="absolute top-7.5 left-[66%] -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-xl">
-              82
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900"></div>
-            </div>
-            <div className="flex justify-between w-full mt-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              <span>01 Oct</span>
-              <span>08 Oct</span>
-              <span>15 Oct</span>
-              <span>22 Oct</span>
-              <span>29 Oct</span>
-            </div>
-          </div>
-        </div>
+        <HeartRateTrendCard readings={vitals} className="lg:col-span-2" />
+        <AiHealthSummaryCard patientId={id} patientName={patient.fullName} />
 
         {/* AI Health Summary */}
-        <div className="bg-blue-600 rounded-4xl p-8 shadow-lg text-white flex flex-col justify-between h-full relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+        {/* <div className="bg-blue-600 rounded-4xl p-8 shadow-lg text-white flex flex-col justify-between h-full relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3" />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
@@ -455,7 +381,7 @@ export default async function PatientDashboard({
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* HISTORICAL READINGS TABLE */}

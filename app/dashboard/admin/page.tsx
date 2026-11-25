@@ -1,11 +1,10 @@
-import {
-  Users,
-  BarChart2,
-  Heart,
-  AlertTriangle,
-} from "lucide-react";
+import { Users, BarChart2, Heart, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+
 import LogoutButton from "@/components/LogoutButton";
 import PatientHistoryTable from "@/components/PatientHistoryTable";
+import DashboardChart from "@/components/DashboardCharts";
+
 import HardwareSessionStatusSync from "@/components/HardwareSessionStatusSync";
 
 import { getDashboardData } from "../../../services/api";
@@ -73,7 +72,14 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <LogoutButton />
+        <div className="flex items-center gap-4">
+          <Link
+            href="/register"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 text-sm font-bold">
+            <span className="text-white">+</span> New Patient
+          </Link>
+          <LogoutButton />
+        </div>
       </header>
 
       {/* TOP METRICS GRID */}
@@ -173,9 +179,9 @@ export default async function AdminDashboard() {
       </div>
 
       {/* MIDDLE SECTION: Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="w-full mb-6">
         {/* Heart Rate Analytics (Line Chart) */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col min-h-100">
+        {/* <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col min-h-100">
           <div className="flex justify-between items-start mb-8">
             <div>
               <h3 className="text-xl font-extrabold text-slate-900">
@@ -196,14 +202,12 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="flex-1 relative w-full flex flex-col justify-end mt-4">
-            {/* Background Grid Lines */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none mb-6">
               <div className="border-t border-slate-100 border-dashed w-full h-0"></div>
               <div className="border-t border-slate-100 border-dashed w-full h-0"></div>
               <div className="border-t border-slate-100 border-dashed w-full h-0"></div>
             </div>
 
-            {/* SVG Spline Chart */}
             <div className="relative w-full h-50 mb-4">
               <svg
                 viewBox="0 0 800 200"
@@ -230,7 +234,6 @@ export default async function AdminDashboard() {
                   stroke="#3b82f6"
                   strokeWidth="3"
                 />
-                {/* Data Points */}
                 <circle
                   cx="200"
                   cy="155"
@@ -258,7 +261,6 @@ export default async function AdminDashboard() {
               </svg>
             </div>
 
-            {/* X-Axis Labels */}
             <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2">
               <span>60 BPM</span>
               <span>70 BPM</span>
@@ -269,10 +271,10 @@ export default async function AdminDashboard() {
               <span>120 BPM</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Health Status (Donut Chart) */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col">
+        {/* <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col">
           <div className="mb-8">
             <h3 className="text-xl font-extrabold text-slate-900">
               Health Status
@@ -283,7 +285,6 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center relative">
-            {/* Donut Chart (CSS Conic Gradient) */}
             <div
               className="w-48 h-48 rounded-full relative flex items-center justify-center mb-8"
               style={{
@@ -293,7 +294,6 @@ export default async function AdminDashboard() {
                   #dc2626 90% 100%
                 )`,
               }}>
-              {/* Inner White Circle */}
               <div className="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
                 <span className="text-3xl font-extrabold text-slate-900">
                   100%
@@ -304,7 +304,6 @@ export default async function AdminDashboard() {
               </div>
             </div>
 
-            {/* Legend */}
             <div className="w-full space-y-3 px-4">
               <div className="flex justify-between items-center text-sm font-semibold">
                 <div className="flex items-center gap-2 text-slate-600">
@@ -329,7 +328,10 @@ export default async function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
+
+        {/* Heart Rate Analytics & Health Status Charts */}
+        <DashboardChart />
       </div>
 
       <PatientHistoryTable patients={patients} />
